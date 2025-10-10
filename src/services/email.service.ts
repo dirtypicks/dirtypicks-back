@@ -7,8 +7,8 @@ import { User } from "@prisma/client";
 ----------------------------------------------------------- */
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,           // 465 = SSL, 587 = STARTTLS
-  secure: true,        // true para 465, false para 587
+  port: 587,           // 465 = SSL, 587 = STARTTLS
+  secure: false,        // true para 465, false para 587
   service: "gmail",
   auth: {
     user: ENV.MAIL_CLIENT,
