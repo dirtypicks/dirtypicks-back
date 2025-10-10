@@ -1,4 +1,4 @@
-import { prisma } from "../config/db";
+import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { generateEmailVerificationToken, generateResetToken, generateToken, markTokenAsUsed, verifyToken } from "../utils/token";

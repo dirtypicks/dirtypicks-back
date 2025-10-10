@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.routes";
-import pickRoutes from "./routes/pick.routes";
-import orderRoutes from "./routes/order.routes";
+import authRoutes from "./routes/auth.routes.js";
+import pickRoutes from "./routes/pick.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 const app = express();
 
