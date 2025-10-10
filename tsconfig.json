@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",              // JS moderno
+    "module": "ESNext",              // ESM nativo
+    "moduleResolution": "node",      // Resolver módulos como Node
+    "rootDir": "src",                // Carpeta de código fuente
+    "outDir": "dist",                // Carpeta de JS compilado
+    "strict": true,                  // Todas las comprobaciones de tipo
+    "esModuleInterop": true,         // Permite imports comunes
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": "src",                 // Para imports absolutos desde src
+    "paths": {
+      "*": ["*"]                     // Para tsconfig-paths si quieres
+    }
+  },
+  "include": ["src"]
+}

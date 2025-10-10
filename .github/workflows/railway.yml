@@ -1,0 +1,31 @@
+# railway.yml
+# 🚀 Configuración de despliegue automático en Railway para DirtyPicks
+# Crea y ejecuta tu backend Node + Prisma + Express con TypeScript
+
+# Nombre del servicio
+service:
+  name: dirtypicks-back
+  env: node
+
+# Comandos de build y start
+build:
+  # 1️⃣ Instala dependencias
+  install:
+    - npm install
+  # 2️⃣ Genera Prisma Client y compila TypeScript
+  command:
+    - npx prisma generate
+    - npm run build
+
+# Comando que Railway ejecuta para iniciar el servicio
+start:
+  command: npm start
+
+# Puerto expuesto (Railway detecta automáticamente pero lo declaramos explícitamente)
+ports:
+  - 4000
+
+# Railway detectará el framework automáticamente,
+# pero lo declaramos por claridad.
+framework:
+  type: node

@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+  Tokens    Token[]
+}
+
+model Pick {
+  id          String   @id @default(uuid())
+  sport       String
+  league      String?
+  event       String
+  description String?
+  price       Float
+  fullPick    String?
+  url         String?
+  status      String   @default("pending")
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders      Order[]
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  pick      Pick     @relation(fields: [pickId], references: [id])
+  pickId    String
+  paymentId String?
+  status    String   @default("paid")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Token {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  type      TokenType
+  used      Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TokenType {
+  PASSWORD_RESET
+  VERIFY_EMAIL
+  MAGIC_LOGIN
+  ORDER_CONFIRMATION
+}
