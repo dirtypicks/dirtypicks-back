@@ -1,8 +1,8 @@
 import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import { generateEmailVerificationToken, generateResetToken, generateToken, markTokenAsUsed, verifyToken } from "../utils/token";
-import { sendResetPasswordEmail, sendVerificationEmail } from "services/email.service";
+import { generateEmailVerificationToken, generateResetToken, generateToken, markTokenAsUsed, verifyToken } from "../utils/token.js";
+import { sendResetPasswordEmail, sendVerificationEmail } from "services/email.service.js";
 import { TokenType } from "@prisma/client";
 
 export const register = async (req: Request, res: Response) => {

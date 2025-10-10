@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { ENV } from "../utils/env";
+import { ENV } from "../utils/env.js";
 import { User } from "@prisma/client";
 
 /* -----------------------------------------------------------

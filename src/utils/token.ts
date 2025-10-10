@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { prisma } from "../config/db";
+import { prisma } from "../config/db.js";
 import { TokenType } from "@prisma/client";
 
 /**

@@ -7,7 +7,7 @@ import {
   resetPassword,
   verifyEmail, // 👈 nueva función
   resendVerificationEmail // 👈 reenviar verificación
-} from "../controllers/auth.controller";
+} from "../controllers/auth.controller.js";
 
 const router = express.Router();
 

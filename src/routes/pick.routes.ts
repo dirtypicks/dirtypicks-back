@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getAllPicks, getPickById, createPick, updatePick, deletePick } from "../controllers/pick.controller";
-import { auth } from "../middleware/auth.middleware";
+import { getAllPicks, getPickById, createPick, updatePick, deletePick } from "../controllers/pick.controller.js";
+import { auth } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
