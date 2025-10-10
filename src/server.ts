@@ -1,4 +1,4 @@
 import app from "./app.js";
-import { ENV } from "./utils/env"
+import { ENV } from "./utils/env.js"
 
 app.listen(ENV.APP_PORT, () => console.log(`Servidor iniciado en ${ENV.APP_HOST}:${ENV.APP_PORT}`));
