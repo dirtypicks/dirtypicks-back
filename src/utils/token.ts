@@ -25,9 +25,7 @@ export const generateResetToken = async (userId: string) => {
     const token = jwt.sign({ userId }, process.env.JWT_SECRET!, {
       expiresIn: "15m",
     });
-
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
-
     await prisma.token.create({
       data: {
         userId,
@@ -41,8 +39,6 @@ export const generateResetToken = async (userId: string) => {
     console.error("Error verificando token:", err);
     throw err;
   }
-
-
 };
 
 /**

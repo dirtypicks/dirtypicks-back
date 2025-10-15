@@ -12,6 +12,12 @@ export const register = async (req: Request, res: Response) => {
     if (existsemail) return res.status(400).json({ msg: "Email ya registrado" });
     const existsUser = await prisma.user.findUnique({ where: { name } });
     if (existsUser) return res.status(400).json({ msg: "Nombre de usuario ya registrado" });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        msg: "La contraseña debe tener mínimo 8 caracteres, e incluir al menos una mayúscula, una minúscula, un número y un carácter especial.",
+      });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({ data: { name, email, password: hashed } });
@@ -118,6 +124,13 @@ export const resetPassword = async (req: Request, res: Response) => {
     const { token, newPassword } = req.body;
     if (!token || !newPassword)
       return res.status(400).json({ msg: "Datos incompletos"});
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        msg: "La contraseña debe tener mínimo 8 caracteres, e incluir al menos una mayúscula, una minúscula, un número y un carácter especial.",
+      });
+    }
 
     // Verificamos token y tipo
     const decoded = await verifyToken(token, TokenType.PASSWORD_RESET);
