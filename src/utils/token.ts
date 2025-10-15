@@ -10,8 +10,8 @@ export const generateToken = (id: string, role: string) => {
     const secret = process.env.JWT_SECRET || "default";
     return jwt.sign({ id, role }, secret, { expiresIn: "7d" });
   } catch (err) {
-    console.error("Error verificando token:", err);
-    throw new Error("Token inválido o expirado");
+    console.error("Error generando token:", err);
+    throw new Error("Error generando token");
 
   }
 
@@ -39,7 +39,7 @@ export const generateResetToken = async (userId: string) => {
     return token;
   } catch (err) {
     console.error("Error verificando token:", err);
-    throw new Error("Token inválido o expirado");
+    throw err;
   }
 
 
@@ -67,8 +67,8 @@ export const generateEmailVerificationToken = async (userId: string) => {
 
     return token;
   } catch (err) {
-    console.error("Error verificando token:", err);
-    throw new Error("Token inválido o expirado");
+    console.error("Error creando token:", err);
+    throw err;
   }
 };
 
@@ -116,5 +116,6 @@ export const markTokenAsUsed = async (token: string) => {
     });
   } catch (err) {
     console.error("Error al marcar token como usado:", err);
+    throw err;
   }
 };

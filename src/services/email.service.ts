@@ -19,30 +19,35 @@ oAuth2Client.setCredentials({
 const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 
 const sendGmailApiEmail = async (mail: MailData) => {
+  try {
+    const message = [
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset=UTF-8`,
+      `Content-Transfer-Encoding: base64`,
+      `From: ${ENV.MAIL_FROM}`,
+      `To: ${mail.to}`,
+      `Subject: =?UTF-8?B?${Buffer.from(mail.subject, "utf-8").toString("base64")}?=`,
+      "",
+      mail.html,
+    ].join("\n");
 
-  const message = [
-    `MIME-Version: 1.0`,
-    `Content-Type: text/html; charset=UTF-8`,
-    `Content-Transfer-Encoding: base64`,
-    `From: ${ENV.MAIL_FROM}`,
-    `To: ${mail.to}`,
-    `Subject: =?UTF-8?B?${Buffer.from(mail.subject, "utf-8").toString("base64")}?=`,
-    "",
-    mail.html,
-  ].join("\n");
+    const encodedMessage = Buffer.from(message, "utf-8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
 
-  const encodedMessage = Buffer.from(message, "utf-8")
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: {
+        raw: encodedMessage,
+      },
+    });
+  } catch (error) {
+    console.error("Error en al enviar correo:", error);
+    throw error;
+  }
 
-  await gmail.users.messages.send({
-    userId: "me",
-    requestBody: {
-      raw: encodedMessage,
-    },
-  });
 };
 
 const wrapEmailContent = (content: string, title: string = "DirtyPicks") => {
