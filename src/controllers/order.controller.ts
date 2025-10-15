@@ -31,10 +31,10 @@ export const createOrder = async (req: Request, res: Response) => {
       include: { pick: true }, // opcional: incluir info del pick
     });
 
-    res.json(order);
+    res.json({order, ok: true});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: "Error al crear orden" });
+    res.status(500).json({ msg: "Error al crear orden", err });
   }
 };
 
@@ -48,9 +48,9 @@ export const getUserOrders = async (req: Request, res: Response) => {
       include: { pick: true },
     });
 
-    res.json(orders);
+    res.json({orders, ok: true});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: "Error al obtener órdenes" });
+    res.status(500).json({ msg: "Error al obtener órdenes", err });
   }
 };

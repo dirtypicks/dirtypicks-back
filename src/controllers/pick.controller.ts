@@ -7,9 +7,9 @@ export const getAllPicks = async (req: Request, res: Response) => {
     const picks = await prisma.pick.findMany({
       where: { visible: true }
     });
-    res.json(picks);
+    res.json({picks, ok: true});
   } catch (err) {
-    res.status(500).json({ msg: "Error al obtener picks" });
+    res.status(500).json({ msg: "Error al obtener picks", err });
   }
 };
 
@@ -22,7 +22,7 @@ export const getPickById = async (req: Request, res: Response) => {
     if (!pick) return res.status(404).json({ msg: "Pick no encontrado" });
     res.json(pick);
   } catch (err) {
-    res.status(500).json({ msg: "Error al obtener pick" });
+    res.status(500).json({ msg: "Error al obtener pick", err });
   }
 };
 
@@ -36,7 +36,7 @@ export const createPick = async (req: Request, res: Response) => {
     const pick = await prisma.pick.create({
       data: { sport, league, event, description, price, fullPick, url }
     });
-    res.json(pick);
+    res.json({pick,ok: true});
   } catch (err) {
     res.status(500).json({ msg: "Error al crear pick", err });
   }
@@ -53,7 +53,7 @@ export const updatePick = async (req: Request, res: Response) => {
       where: { id: req.params.id },
       data: { sport, league, event, description, price, fullPick, url, visible, status }
     });
-    res.json(pick);
+    res.json({pick, ok: true});
   } catch (err) {
     res.status(500).json({ msg: "Error al actualizar pick", err });
   }
@@ -66,8 +66,8 @@ export const deletePick = async (req: Request, res: Response) => {
     if (user.role !== "admin") return res.status(403).json({ msg: "No tienes privilegios para esta acción" });
 
     await prisma.pick.delete({ where: { id: req.params.id } });
-    res.json({ msg: "Pick eliminado" });
+    res.json({ msg: "Pick eliminado", ok: true });
   } catch (err) {
-    res.status(500).json({ msg: "Error al eliminar pick" });
+    res.status(500).json({ msg: "Error al eliminar pick", err });
   }
 };
