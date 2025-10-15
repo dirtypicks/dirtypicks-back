@@ -44,6 +44,7 @@ model Order {
   pickId    String
   paymentId String?
   status    String   @default("paid")
+  paid      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

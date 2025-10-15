@@ -131,7 +131,7 @@ export const sendVerificationEmail = async (user: User, token: string) => {
               Verificar correo
             </a>
           </p>
-          <p>Este enlace expirará en 24 horas.</p>
+          <p>Este enlace expirará en 1 hora.</p>
         `;
 
     const html = wrapEmailContent(content, "Verifica tu correo - DirtyPicks");
