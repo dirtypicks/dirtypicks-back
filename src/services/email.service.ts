@@ -1,33 +1,24 @@
 import { google } from "googleapis";
-import { OAuth2Client } from "google-auth-library";
-import { ENV } from "../utils/env";
-import { prisma } from "../config/db";
+import { ENV } from "../utils/env.js";
 import { User } from "@prisma/client";
 
 interface MailData {
   to: string, subject: string, html: string
 }
-/* -----------------------------------------------------------
-   1. Configuración del Cliente OAuth2
------------------------------------------------------------ */
-// Este cliente es fundamental para gestionar el refresh token y obtener access tokens.
+
 const oAuth2Client = new google.auth.OAuth2(
   ENV.MAIL_GCLIENT,
   ENV.MAIL_GSECRET,
-  ENV.MAIL_REDIRECT_URI // Usar la URI registrada (ej. del Playground)
+  ENV.MAIL_REDIRECT_URI
 );
 
-// Establecemos el refresh token
 oAuth2Client.setCredentials({
   refresh_token: ENV.MAIL_REFRESH_TOKEN
 });
 
-// Inicializar el servicio de Gmail
 const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 
-// Función para enviar correo usando Gmail API
 const sendGmailApiEmail = async (mail: MailData) => {
-  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
   const message = [
     `MIME-Version: 1.0`,
@@ -45,7 +36,7 @@ const sendGmailApiEmail = async (mail: MailData) => {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-    
+
   await gmail.users.messages.send({
     userId: "me",
     requestBody: {
@@ -54,11 +45,6 @@ const sendGmailApiEmail = async (mail: MailData) => {
   });
 };
 
-
-/* -----------------------------------------------------------
-   4. Template base para todos los correos
-   (Esta función se mantiene igual)
------------------------------------------------------------ */
 const wrapEmailContent = (content: string, title: string = "DirtyPicks") => {
   return `
   <!DOCTYPE html>
@@ -127,14 +113,6 @@ const wrapEmailContent = (content: string, title: string = "DirtyPicks") => {
   `;
 };
 
-
-/* -----------------------------------------------------------
-   5. Implementaciones Específicas (usando sendGmailApiEmail)
------------------------------------------------------------ */
-
-/**
- * ✅ Enviar correo de verificación al registrarse
- */
 export const sendVerificationEmail = async (user: User, token: string) => {
   try {
     const verifyUrl = `${ENV.FRONT_HOST}/verify-email?token=${token}`;
