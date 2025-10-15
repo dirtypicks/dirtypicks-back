@@ -1,23 +1,63 @@
-import nodemailer from "nodemailer";
-import { ENV } from "../utils/env.js";
+import { google } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
+import { ENV } from "../utils/env";
+import { prisma } from "../config/db";
 import { User } from "@prisma/client";
 
+interface MailData {
+  to: string, subject: string, html: string
+}
 /* -----------------------------------------------------------
-   📧 Configuración de transporte con Gmail
+   1. Configuración del Cliente OAuth2
 ----------------------------------------------------------- */
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,           // 465 = SSL, 587 = STARTTLS
-  secure: false,        // true para 465, false para 587
-  service: "gmail",
-  auth: {
-    user: ENV.MAIL_CLIENT,
-    pass: ENV.MAIL_SECRET,
-  },
+// Este cliente es fundamental para gestionar el refresh token y obtener access tokens.
+const oAuth2Client = new google.auth.OAuth2(
+  ENV.MAIL_GCLIENT,
+  ENV.MAIL_GSECRET,
+  ENV.MAIL_REDIRECT_URI // Usar la URI registrada (ej. del Playground)
+);
+
+// Establecemos el refresh token
+oAuth2Client.setCredentials({
+  refresh_token: ENV.MAIL_REFRESH_TOKEN
 });
 
+// Inicializar el servicio de Gmail
+const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+
+// Función para enviar correo usando Gmail API
+const sendGmailApiEmail = async (mail: MailData) => {
+  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
+  const message = [
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    `From: ${ENV.MAIL_FROM}`,
+    `To: ${mail.to}`,
+    `Subject: =?UTF-8?B?${Buffer.from(mail.subject, "utf-8").toString("base64")}?=`,
+    "",
+    mail.html,
+  ].join("\n");
+
+  const encodedMessage = Buffer.from(message, "utf-8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+    
+  await gmail.users.messages.send({
+    userId: "me",
+    requestBody: {
+      raw: encodedMessage,
+    },
+  });
+};
+
+
 /* -----------------------------------------------------------
-   📩 Template base para todos los correos
+   4. Template base para todos los correos
+   (Esta función se mantiene igual)
 ----------------------------------------------------------- */
 const wrapEmailContent = (content: string, title: string = "DirtyPicks") => {
   return `
@@ -87,97 +127,99 @@ const wrapEmailContent = (content: string, title: string = "DirtyPicks") => {
   `;
 };
 
+
 /* -----------------------------------------------------------
-   ✅ Enviar correo de verificación al registrarse
+   5. Implementaciones Específicas (usando sendGmailApiEmail)
 ----------------------------------------------------------- */
+
+/**
+ * ✅ Enviar correo de verificación al registrarse
+ */
 export const sendVerificationEmail = async (user: User, token: string) => {
   try {
     const verifyUrl = `${ENV.FRONT_HOST}/verify-email?token=${token}`;
 
     const content = `
-      <h2>¡Hola ${user.name}!</h2>
-      <p>Gracias por registrarte en <strong>DirtyPicks</strong>.</p>
-      <p>Haz clic en el siguiente botón para verificar tu cuenta:</p>
-      <p>
-        <a href="${verifyUrl}" class="button" target="_blank">
-          Verificar correo
-        </a>
-      </p>
-      <p>Este enlace expirará en 24 horas.</p>
-    `;
+          <h2>¡Hola ${user.name}!</h2>
+          <p>Gracias por registrarte en <strong>DirtyPicks</strong>.</p>
+          <p>Haz clic en el siguiente botón para verificar tu cuenta:</p>
+          <p>
+            <a href="${verifyUrl}" class="button" target="_blank">
+              Verificar correo
+            </a>
+          </p>
+          <p>Este enlace expirará en 24 horas.</p>
+        `;
 
     const html = wrapEmailContent(content, "Verifica tu correo - DirtyPicks");
 
-    await transporter.sendMail({
-      from: `DirtyPicks <${ENV.MAIL_CLIENT}>`,
+    const mailOptions = {
       to: user.email,
       subject: "Verifica tu correo electrónico - DirtyPicks",
       html,
-    });
+    };
 
-    return { msg: "Correo de verificación enviado" };
+    return sendGmailApiEmail(mailOptions);
   } catch (error) {
     console.error("Error en sendVerificationEmail:", error);
     throw error;
   }
 };
 
-/* -----------------------------------------------------------
-   🔐 Enviar correo para reestablecer contraseña
------------------------------------------------------------ */
+/**
+ * 🔐 Enviar correo para reestablecer contraseña
+ */
 export const sendResetPasswordEmail = async (user: User, token: string) => {
   try {
     const resetUrl = `${ENV.FRONT_HOST}/reset-password?token=${token}`;
 
     const content = `
-      <h2>Solicitud de reestablecimiento de contraseña</h2>
-      <p>Hola <strong>${user.name}</strong>, solicitaste reestablecer tu contraseña.</p>
-      <p>Haz clic en el siguiente botón para continuar (válido por 15 minutos):</p>
-      <p>
-        <a href="${resetUrl}" class="button" target="_blank">
-          Reestablecer contraseña
-        </a>
-      </p>
-      <p>Si no solicitaste este cambio, ignora este mensaje.</p>
-    `;
+          <h2>Solicitud de reestablecimiento de contraseña</h2>
+          <p>Hola <strong>${user.name}</strong>, solicitaste reestablecer tu contraseña.</p>
+          <p>Haz clic en el siguiente botón para continuar (válido por 15 minutos):</p>
+          <p>
+            <a href="${resetUrl}" class="button" target="_blank">
+              Reestablecer contraseña
+            </a>
+          </p>
+          <p>Si no solicitaste este cambio, ignora este mensaje.</p>
+        `;
 
     const html = wrapEmailContent(content, "Reestablecer contraseña - DirtyPicks");
 
-    await transporter.sendMail({
-      from: `DirtyPicks <${ENV.MAIL_CLIENT}>`,
+    const mailOptions = {
       to: user.email,
       subject: "Reestablecer contraseña - DirtyPicks",
-      html,
-    });
+      html: html,
+    };
 
-    return { msg: "Correo de recuperación enviado" };
+    return sendGmailApiEmail(mailOptions);
   } catch (error) {
     console.error("Error en sendResetPasswordEmail:", error);
     throw new Error("No se pudo enviar el correo de recuperación");
   }
 };
 
-/* -----------------------------------------------------------
-   🧱 (Ejemplo opcional) Enviar confirmación de compra
------------------------------------------------------------ */
+/**
+ * 🧱 Enviar confirmación de compra (Ejemplo opcional)
+ */
 export const sendOrderConfirmationEmail = async (user: User, pickTitle: string) => {
   try {
     const content = `
-      <h2>Gracias por tu compra, ${user.name}!</h2>
-      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible en tu cuenta.</p>
-      <p>¡Te deseamos mucha suerte 🍀!</p>
-    `;
+          <h2>Gracias por tu compra, ${user.name}!</h2>
+          <p>Tu pick <strong>${pickTitle}</strong> ya está disponible en tu cuenta.</p>
+          <p>¡Te deseamos mucha suerte 🍀!</p>
+        `;
 
     const html = wrapEmailContent(content, "Confirmación de compra - DirtyPicks");
 
-    await transporter.sendMail({
-      from: `DirtyPicks <${ENV.MAIL_CLIENT}>`,
+    const mailOptions = {
       to: user.email,
       subject: "Confirmación de compra - DirtyPicks",
-      html,
-    });
+      html: html,
+    };
 
-    return { msg: "Correo de confirmación enviado" };
+    return sendGmailApiEmail(mailOptions);
   } catch (error) {
     console.error("Error en sendOrderConfirmationEmail:", error);
     throw new Error("No se pudo enviar el correo de confirmación");
