@@ -186,20 +186,26 @@ export const sendResetPasswordEmail = async (user: User, token: string) => {
 /**
  * 🧱 Enviar confirmación de compra (Ejemplo opcional)
  */
-export const sendOrderConfirmationEmail = async (user: User, pickTitle: string) => {
+
+interface EmailUser {
+  name: string;
+  email: string;
+}
+
+export const sendOrderConfirmationEmail = async (user: EmailUser, pickTitle: string) => {
   try {
     const content = `
-          <h2>Gracias por tu compra, ${user.name}!</h2>
-          <p>Tu pick <strong>${pickTitle}</strong> ya está disponible en tu cuenta.</p>
-          <p>¡Te deseamos mucha suerte 🍀!</p>
-        `;
+      <h2>Gracias por tu compra, ${user.name || "amigo"}!</h2>
+      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible ${user.name ? "en tu cuenta" : "para ti"}.</p>
+      <p>¡Te deseamos mucha suerte 🍀!</p>
+    `;
 
     const html = wrapEmailContent(content, "Confirmación de compra - DirtyPicks");
 
     const mailOptions = {
       to: user.email,
       subject: "Confirmación de compra - DirtyPicks",
-      html: html,
+      html,
     };
 
     return sendGmailApiEmail(mailOptions);
