@@ -25,7 +25,7 @@ export const register = async (req: Request, res: Response) => {
     const token = await generateEmailVerificationToken(user.id);
     await sendVerificationEmail(user, token);
 
-    res.json({ msg: "Usuario creado", user });
+    res.json({ msg: "Usuario creado", user, ok: true });
   } catch (err) {
     console.log("Error al registrar usuario", err);
     res.status(500).json({ msg: "Error al registrar", err });
@@ -49,7 +49,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     // Marcamos token como usado
     await markTokenAsUsed(token);
 
-    return res.json({ msg: "Correo electrónico verificado correctamente" });
+    return res.json({ msg: "Correo electrónico verificado correctamente", ok: true });
   } catch (err: any) {
     return res.status(400).json({ msg: err.message || "Token inválido o expirado" });
   }
