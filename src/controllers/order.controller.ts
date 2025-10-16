@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/db.js";
-import { sendOrderConfirmationEmail } from "services/email.service.js";
+import { sendOrderConfirmationEmail } from "../services/email.service.js";
 
 // Crear orden (comprar pick)
 export const createOrder = async (req: Request, res: Response) => {
