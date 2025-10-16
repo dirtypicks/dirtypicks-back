@@ -196,7 +196,7 @@ export const sendOrderConfirmationEmail = async (user: EmailUser, pickTitle: str
   try {
     const content = `
       <h2>Gracias por tu compra, ${user.name || "amigo"}!</h2>
-      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible ${user.name ? "en tu cuenta" : "para ti"}.</p>
+      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible para ti}.</p>
       <p>¡Te deseamos mucha suerte 🍀!</p>
     `;
 
