@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { ENV } from "../utils/env.js";
-import { User } from "@prisma/client";
+import { Order, User } from "@prisma/client";
 
 interface MailData {
   to: string, subject: string, html: string
@@ -192,11 +192,12 @@ interface EmailUser {
   email: string;
 }
 
-export const sendOrderConfirmationEmail = async (user: EmailUser, pickTitle: string) => {
+export const sendOrderConfirmationEmail = async (user: EmailUser, pickTitle: string, order: Order) => {
   try {
     const content = `
       <h2>Gracias por tu compra, ${user.name || "amigo"}!</h2>
-      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible para ti}.</p>
+      <p>Tu orden número de order: <strong>${order.id}</strong>.</p>
+      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible para ti.</p>
       <p>¡Te deseamos mucha suerte 🍀!</p>
     `;
 

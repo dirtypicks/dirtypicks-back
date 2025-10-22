@@ -37,16 +37,34 @@ model Pick {
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    String?          // ahora es opcional
-  email     String?          // para órdenes sin usuario
-  pick      Pick     @relation(fields: [pickId], references: [id])
-  pickId    String
-  paymentId String?
-  status    String   @default("paid")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  user                User?     @relation(fields: [userId], references: [id])
+  userId              String?
+  email               String?
+  pick                Pick      @relation(fields: [pickId], references: [id])
+  pickId              String
+  paymentProvider     PaymentProvider?   // STRIPE
+  paymentProviderId   String?             // payment_intent id
+  paymentStatus       PaymentStatus      @default(PENDING)
+  currency            String             @default("MXN")
+  amount              Float
+  receiptUrl          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+enum PaymentProvider {
+  STRIPE
+  // PAYPAL
+  // MERCADOPAGO
+}
+
+enum PaymentStatus {
+  PENDING
+  REQUIRES_ACTION
+  PAID
+  FAILED
+  REFUNDED
 }
 
 model Token {
