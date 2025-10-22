@@ -3,7 +3,7 @@ import { prisma } from "../config/db.js";
 import { sendOrderConfirmationEmail } from "../services/email.service.js";
 import { createPayment, verifyPayment } from "../services/payment.service.js";
 import { PaymentProvider, PaymentStatus } from "@prisma/client";
-import { ENV } from "utils/env.js";
+import { ENV } from "../utils/env.js";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
