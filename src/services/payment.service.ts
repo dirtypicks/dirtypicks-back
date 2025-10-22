@@ -2,7 +2,7 @@
 // futuro: import { createPayPalPayment } from "./paypal.service.js";
 // futuro: import { createMercadoPagoPayment } from "./mercadopago.service.js";
 import { PaymentProvider } from "@prisma/client";
-import { createStripePayment, verifyStripePayment } from "./stripe.service";
+import { createStripePayment, verifyStripePayment } from "./stripe.service.js";
 
 interface PaymentOptions {
   provider: PaymentProvider;
