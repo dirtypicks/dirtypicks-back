@@ -19,12 +19,3 @@ export async function createPayment(options: PaymentOptions) {
       throw new Error("Proveedor de pago no soportado");
   }
 }
-
-export async function verifyPayment(provider: PaymentProvider, paymentId: string) {
-  switch (provider) {
-    case "STRIPE":
-      return await verifyStripePayment(paymentId);
-    default:
-      throw new Error("Proveedor de pago no soportado");
-  }
-}

@@ -5,7 +5,8 @@ import { prisma } from "../config/db.js";
 export const getAllPicks = async (req: Request, res: Response) => {
   try {
     const picks = await prisma.pick.findMany({
-      where: { visible: true }
+      where: { visible: true },
+       omit: { fullPick: true }
     });
     res.json({picks, ok: true});
   } catch (err) {

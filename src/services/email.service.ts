@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { ENV } from "../utils/env.js";
-import { Order, User } from "@prisma/client";
+import { Order, Pick, User } from "@prisma/client";
 
 interface MailData {
   to: string, subject: string, html: string
@@ -183,28 +183,27 @@ export const sendResetPasswordEmail = async (user: User, token: string) => {
   }
 };
 
+export type OrderWithRelations = Order & {
+  user: User | null;
+  pick: Pick;
+};
+
 /**
  * 🧱 Enviar confirmación de compra (Ejemplo opcional)
  */
-
-interface EmailUser {
-  name: string;
-  email: string;
-}
-
-export const sendOrderConfirmationEmail = async (user: EmailUser, pickTitle: string, order: Order) => {
+export const sendOrderConfirmationEmail = async (order: OrderWithRelations) => {
   try {
     const content = `
-      <h2>Gracias por tu compra, ${user.name || "amigo"}!</h2>
+      <h2>Gracias por tu compra, ${order.user?.name || order.email}!</h2>
       <p>Tu orden número de order: <strong>${order.id}</strong>.</p>
-      <p>Tu pick <strong>${pickTitle}</strong> ya está disponible para ti.</p>
+      <p>Tu pick <strong>${order.pick.event}</strong> ya está disponible para ti.</p>
       <p>¡Te deseamos mucha suerte 🍀!</p>
     `;
 
     const html = wrapEmailContent(content, "Confirmación de compra - DirtyPicks");
 
     const mailOptions = {
-      to: user.email,
+      to: order.email || order.user?.email || "Cliente",
       subject: "Confirmación de compra - DirtyPicks",
       html,
     };

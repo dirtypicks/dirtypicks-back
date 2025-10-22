@@ -7,7 +7,7 @@ import { ENV } from "../utils/env.js";
 const router = express.Router();
 const stripe = new Stripe(ENV.STRIPE_SECRET_KEY, { apiVersion: "2025-09-30.clover" });
 
-router.post(
+/* router.post(
     "/stripe",
     express.raw({ type: "application/json" }), // 👈 importante: no usar express.json() aquí
     async (req, res) => {
@@ -90,6 +90,88 @@ router.post(
             res.status(500).send("Webhook handler failed");
         }
     }
+); */
+
+router.post(
+  "/stripe",
+  express.raw({ type: "application/json" }), // 👈 necesario para Stripe
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    if (!sig) return res.status(400).send("No signature");
+
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        ENV.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err: any) {
+      console.error("⚠️ Webhook error:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    try {
+      console.log(event.type)
+      switch (event.type) {
+        // ✅ Pago completado
+        case "payment_intent.succeeded": {
+          const intent = event.data.object as Stripe.PaymentIntent;
+          const metadata = intent.metadata || {};
+
+          // Buscar el pickId (debería estar en metadata)
+          const pickId = metadata.pickId;
+          const userId = metadata.userId || null;
+          const email = metadata.email;
+          const amount = metadata.amount;
+
+          // Crear la orden ya pagada
+          const order = await prisma.order.create({
+            data: {
+              pickId,
+              userId,
+              email,
+              paymentProvider: "STRIPE",
+              paymentProviderId: intent.id,
+              paymentStatus: "PAID",
+              amount: parseFloat(amount || "0"),
+            },
+            include: { pick: true, user: true },
+          });
+          
+          // Enviar correo
+          await sendOrderConfirmationEmail(order);
+
+          console.log(`✅ Orden ${order.id} creada y marcada como pagada`);
+          break;
+        }
+
+        // ❌ Pago fallido
+        case "payment_intent.payment_failed": {
+          const intent = event.data.object as Stripe.PaymentIntent;
+          console.log(`❌ Pago fallido para ${intent.id}`);
+          break;
+        }
+
+        // 🔍 PaymentIntent creado (solo log)
+        case "payment_intent.created": {
+          const intent = event.data.object as Stripe.PaymentIntent;
+          console.log(`📌 PaymentIntent creado: ${intent.id}`);
+          break;
+        }
+
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+
+      res.status(200).send("ok");
+    } catch (err) {
+      console.error("Error procesando webhook:", err);
+      res.status(500).send("Webhook handler failed");
+    }
+  }
 );
+
 
 export default router;

@@ -20,10 +20,10 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({ data: { name, email, password: hashed } });
+    const user = await prisma.user.create({ data: { name, email, password: hashed }, omit: { password: true } });
     //addUserAudience(user);
     const token = await generateEmailVerificationToken(user.id);
-    await sendVerificationEmail(user, token);
+    await sendVerificationEmail(user as any, token);
 
     res.json({ msg: "Usuario creado", user, ok: true });
   } catch (err) {
@@ -44,6 +44,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     await prisma.user.update({
       where: { id: decoded.userId },
       data: { verified: true },
+      omit: { password: true }
     });
 
     // Marcamos token como usado
@@ -60,14 +61,14 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email)
-      return res.status(400).json({ msg: "El correo es requerido."});
+      return res.status(400).json({ msg: "El correo es requerido." });
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user)
-      return res.status(404).json({ msg: "Usuario no encontrado."});
+      return res.status(404).json({ msg: "Usuario no encontrado." });
 
     if (user.verified)
-      return res.status(400).json({ msg: "Este usuario ya está verificado."});
+      return res.status(400).json({ msg: "Este usuario ya está verificado." });
 
     const token = await generateEmailVerificationToken(user.id);
     await sendVerificationEmail(user, token);
@@ -75,7 +76,7 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
     res.json({ msg: "Correo de verificación reenviado exitosamente.", ok: true });
   } catch (err) {
     console.error("Error reenviando correo de verificación:", err);
-    res.status(500).json({ msg: "Error al reenviar correo de verificación.", err});
+    res.status(500).json({ msg: "Error al reenviar correo de verificación.", err });
   }
 };
 
@@ -84,29 +85,29 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ msg: "Usuario no encontrado"});
+    if (!user) return res.status(400).json({ msg: "Usuario no encontrado" });
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ msg: "Contraseña incorrecta"});
+    if (!valid) return res.status(401).json({ msg: "Contraseña incorrecta" });
 
     if (!user.verified) {
-      return res.status(403).json({ msg: "Debes verificar tu correo antes de iniciar sesión"});
+      return res.status(403).json({ msg: "Debes verificar tu correo antes de iniciar sesión" });
     }
 
     const token = generateToken(user.id, user.role);
     res.json({ token, user, ok: true });
-  } catch(err) {
-    res.status(500).json({ msg: "Error al iniciar sesión", err});
+  } catch (err) {
+    res.status(500).json({ msg: "Error al iniciar sesión", err });
   }
 };
 
 export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ msg: "Email requerido"});
+    if (!email) return res.status(400).json({ msg: "Email requerido" });
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ msg: "Usuario no encontrado"});
+    if (!user) return res.status(404).json({ msg: "Usuario no encontrado" });
 
     const resetToken = await generateResetToken(user.id);
 
@@ -115,7 +116,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     return res.json({ msg: "Correo de restablecimiento enviado", ok: true });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ msg: "Error al solicitar restablecimiento", err});
+    return res.status(500).json({ msg: "Error al solicitar restablecimiento", err });
   }
 };
 
@@ -123,7 +124,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword)
-      return res.status(400).json({ msg: "Datos incompletos"});
+      return res.status(400).json({ msg: "Datos incompletos" });
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
@@ -150,6 +151,6 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.json({ msg: "Contraseña actualizada correctamente", ok: true });
   } catch (err: any) {
     // Devolvemos mensaje directo al usuario
-    return res.status(400).json({ msg: err.message || "Token inválido o expirado"});
+    return res.status(400).json({ msg: err.message || "Token inválido o expirado" });
   }
 };
